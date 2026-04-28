@@ -12,50 +12,53 @@ interface PageWrapperProps {
 export default function PageWrapper({ children }: PageWrapperProps) {
   const pathname = usePathname();
   const isExperience = pathname === '/experience';
+  const isSkills = pathname === '/skills';
+  const isHome = pathname === '/';
+  const isScrollable = isExperience || isSkills;
 
   return (
-    <main className={`bg-white w-full ${isExperience ? 'min-h-screen' : 'h-screen max-h-screen overflow-hidden'} box-border flex items-center justify-center`}>
+    <main className={`w-full box-border flex items-center justify-center bg-white ${isScrollable ? 'min-h-screen' : 'h-screen max-h-screen overflow-hidden'}`}>
       <AnimatePresence mode="wait">
-        <motion.div 
+        <motion.div
           key={pathname} // Triggers entry animation on route change
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className={`relative w-[95%] flex flex-col items-center justify-center bg-white ${!isExperience ? 'h-[95vh] shadow-sm' : 'min-h-[95vh] pt-10 pb-32 border-none shadow-none'}`}
+          className={`relative w-[95%] flex flex-col items-center justify-center bg-white ${isScrollable ? 'min-h-[95vh] pt-10 pb-32 border-none shadow-none' : isHome ? 'h-[95vh] bg-white shadow-sm' : 'h-[95vh] shadow-sm'}`}
         >
           {/* Border L Shape with draw animation - Hidden on Experience page */}
-          {!isExperience && (
+          {!isScrollable && (
             <>
-              <motion.span 
+              <motion.span
                 initial={{ width: 0, height: 0 }}
                 animate={{ width: 40, height: 40 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                className="absolute top-0 left-0 border-t-2 border-l-2 border-black" 
+                className="absolute top-0 left-0 border-t-2 border-l-2 border-black"
               />
-              <motion.span 
+              <motion.span
                 initial={{ width: 0, height: 0 }}
                 animate={{ width: 40, height: 40 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                className="absolute top-0 right-0 border-t-2 border-r-2 border-black" 
+                className="absolute top-0 right-0 border-t-2 border-r-2 border-black"
               />
-              <motion.span 
+              <motion.span
                 initial={{ width: 0, height: 0 }}
                 animate={{ width: 40, height: 40 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                className="absolute bottom-0 left-0 border-b-2 border-l-2 border-black" 
+                className="absolute bottom-0 left-0 border-b-2 border-l-2 border-black"
               />
-              <motion.span 
+              <motion.span
                 initial={{ width: 0, height: 0 }}
                 animate={{ width: 40, height: 40 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                className="absolute bottom-0 right-0 border-b-2 border-r-2 border-black" 
+                className="absolute bottom-0 right-0 border-b-2 border-r-2 border-black"
               />
             </>
           )}
 
           {/* Individual Page Content */}
-          <div className={`flex flex-col gap-10 items-center w-full max-w-5xl px-4 ${isExperience ? 'w-full' : 'mt-16 mb-24 overflow-y-auto no-scrollbar pb-10'}`}>
+          <div className={`flex flex-col gap-10 items-center w-full ${isScrollable ? 'max-w-none px-0 w-full' : isHome ? 'h-full w-full max-w-none px-0' : 'max-w-5xl px-4 mt-16 mb-24 overflow-y-auto no-scrollbar pb-10'}`}>
             {children}
           </div>
 
@@ -63,7 +66,7 @@ export default function PageWrapper({ children }: PageWrapperProps) {
       </AnimatePresence>
 
       {/* Dynamic Nav Menu - Now fixed to viewport so it stays comfortable when scrolling long content */}
-      <motion.div 
+      <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.8 }}
@@ -74,12 +77,13 @@ export default function PageWrapper({ children }: PageWrapperProps) {
             { name: 'Home', path: '/' },
             { name: 'About', path: '/about' },
             { name: 'Experience', path: '/experience' },
+            { name: 'Skills', path: '/skills' },
             { name: 'Projects', path: '/projects' },
             { name: 'Contact', path: '/contact' }
           ].map((item, idx) => (
             <li key={idx}>
-              <Link 
-                href={item.path} 
+              <Link
+                href={item.path}
                 className="text-black text-lg md:text-xl font-medium relative group inline-block"
               >
                 {/* Magnetic-like effect on hover */}
@@ -91,10 +95,9 @@ export default function PageWrapper({ children }: PageWrapperProps) {
                 >
                   {item.name}
                 </motion.div>
-                <span 
-                  className={`absolute left-0 -bottom-2 w-full h-[2px] bg-black origin-left transition-transform duration-300 ease-out ${
-                    item.path === pathname ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
-                  }`} 
+                <span
+                  className={`absolute left-0 -bottom-2 w-full h-[2px] bg-black origin-left transition-transform duration-300 ease-out ${item.path === pathname ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                    }`}
                 />
               </Link>
             </li>
