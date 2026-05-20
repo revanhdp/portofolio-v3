@@ -1,302 +1,289 @@
 "use client";
 
-import { motion, useScroll, useSpring } from "framer-motion";
-import React, { useRef } from "react";
+import { motion } from "framer-motion";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-/* ─────────────────────────────────────────────
-   Data — grouped by category
-───────────────────────────────────────────── */
+type Point = { x: number; y: number };
+
 const categories = [
   {
-    id: 1,
+    id: "frontend",
     label: "Frontend",
-    skills: [
-      { name: "React",      level: "Advanced",      tag: "UI Library"     },
-      { name: "Next.js",    level: "Advanced",      tag: "Full-stack FW"  },
-      { name: "TypeScript", level: "Advanced",      tag: "Type Safety"    },
-      { name: "Tailwind",   level: "Advanced",      tag: "Styling"        },
-    ],
+    skills: ["React", "Next.js", "TypeScript", "Tailwind CSS"],
   },
   {
-    id: 2,
+    id: "backend",
     label: "Backend",
-    skills: [
-      { name: "Node.js",    level: "Intermediate",  tag: "Runtime"        },
-      { name: "Express",    level: "Intermediate",  tag: "HTTP Server"    },
-      { name: "REST APIs",  level: "Advanced",      tag: "Architecture"   },
-      { name: "GraphQL",    level: "Intermediate",  tag: "Query Layer"    },
-    ],
+    skills: ["Node.js", "NestJS", "Express", "Prisma"],
   },
   {
-    id: 3,
+    id: "database",
     label: "Database",
-    skills: [
-      { name: "PostgreSQL", level: "Intermediate",  tag: "Relational DB"  },
-      { name: "Prisma",     level: "Intermediate",  tag: "ORM"            },
-      { name: "Redis",      level: "Beginner",      tag: "Cache / Queue"  },
-      { name: "Supabase",   level: "Intermediate",  tag: "BaaS"           },
-    ],
+    skills: ["PostgreSQL", "MySQL", "MongoDB"],
   },
   {
-    id: 4,
-    label: "Tooling & Design",
-    skills: [
-      { name: "Figma",      level: "Intermediate",  tag: "UI / UX Design" },
-      { name: "Git",        level: "Advanced",      tag: "Version Control" },
-      { name: "Docker",     level: "Beginner",      tag: "Containers"     },
-      { name: "Linux",      level: "Intermediate",  tag: "OS / DevOps"    },
-    ],
+    id: "devops",
+    label: "DevOps",
+    skills: ["Docker", "CI/CD", "Linux", "Vercel"],
+  },
+  {
+    id: "tools",
+    label: "Tools",
+    skills: ["Git", "Figma", "Postman"],
   },
 ];
 
-/* ─────────────────────────────────────────────
-   Scroll Progress Sidebar
-───────────────────────────────────────────── */
-function ScrollProgress({
-  scrollYProgress,
-}: {
-  scrollYProgress: ReturnType<typeof useScroll>["scrollYProgress"];
-}) {
-  const scaleY = useSpring(scrollYProgress, { stiffness: 80, damping: 22, restDelta: 0.001 });
-  return (
-    <div className="fixed right-6 md:right-10 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-3 pointer-events-none">
-      <div className="w-px h-36 md:h-52 bg-black/10 relative overflow-hidden">
-        <motion.div
-          className="absolute top-0 left-0 w-full bg-black origin-top"
-          style={{ scaleY }}
-        />
-      </div>
-      <span className="text-[9px] font-bold tracking-widest text-black/30 uppercase">scroll</span>
-    </div>
-  );
-}
+const parentLayout = [
+  { id: "frontend", x: 0.22, y: 0.32 },
+  { id: "backend", x: 0.6, y: 0.24 },
+  { id: "database", x: 0.78, y: 0.55 },
+  { id: "devops", x: 0.4, y: 0.7 },
+  { id: "tools", x: 0.18, y: 0.75 },
+];
 
-/* ─────────────────────────────────────────────
-   Snake connector SVG between category blocks
-───────────────────────────────────────────── */
-function SnakeConnector({ index }: { index: number }) {
-  const curvesRight = index % 2 === 0;
-  return (
-    <div className="relative w-full h-20 md:h-24 flex items-center justify-center overflow-visible">
-      <svg viewBox="0 0 600 70" className="w-full h-full" preserveAspectRatio="none" fill="none">
-        <motion.path
-          d={curvesRight
-            ? "M300 0 C300 0, 430 35, 300 70"
-            : "M300 0 C300 0, 170 35, 300 70"}
-          stroke="black"
-          strokeWidth="1"
-          strokeDasharray="5 5"
-          strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 0.25 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 1, ease: "easeInOut" }}
-        />
-      </svg>
-    </div>
-  );
-}
+function buildInitialPositions(bounds: { width: number; height: number }) {
+  const width = Math.max(bounds.width, 320);
+  const height = Math.max(bounds.height, 520);
 
-/* ─────────────────────────────────────────────
-   Center Node
-───────────────────────────────────────────── */
-function CenterNode({ index }: { index: number }) {
-  return (
-    <div className="absolute left-1/2 -translate-x-1/2 z-10">
-      <motion.div
-        className="relative flex items-center justify-center"
-        initial={{ scale: 0, opacity: 0 }}
-        whileInView={{ scale: 1, opacity: 1 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
-      >
-        {/* Pulsing outer ring */}
-        <motion.div
-          className="absolute w-11 h-11 rounded-full border border-black/20"
-          animate={{ scale: [1, 1.35, 1], opacity: [0.3, 0, 0.3] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Core */}
-        <div className="w-6 h-6 rounded-full bg-black border-[3px] border-white shadow-[0_0_0_1px_rgba(0,0,0,0.15)] flex items-center justify-center">
-          <span className="text-white text-[8px] font-black select-none">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Skill pill — inside each category card
-───────────────────────────────────────────── */
-function SkillPill({ name, level, tag }: { name: string; level: string; tag: string }) {
-  return (
-    <motion.div
-      className="group relative flex items-center justify-between gap-4 border border-black/10 px-4 py-3 overflow-hidden cursor-none"
-      whileHover={{
-        borderColor: "rgba(0,0,0,0.6)",
-        backgroundColor: "#000",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-      }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
-    >
-      {/* Hover fill effect */}
-      <motion.div
-        className="absolute inset-0 bg-black origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out pointer-events-none"
-        style={{ transformOrigin: "left" }}
-      />
-
-      <div className="relative z-10 flex items-center gap-3">
-        <span className="text-sm font-bold text-black group-hover:text-white transition-colors duration-200">
-          {name}
-        </span>
-        <span className="text-[9px] font-semibold tracking-[0.15em] uppercase text-black/35 group-hover:text-white/50 transition-colors duration-200">
-          {tag}
-        </span>
-      </div>
-
-      <span className="relative z-10 text-[10px] font-bold tracking-wide uppercase text-black/30 group-hover:text-white/50 transition-colors duration-200">
-        {level}
-      </span>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Category Card (left or right)
-───────────────────────────────────────────── */
-function CategoryCard({
-  cat,
-  index,
-}: {
-  cat: (typeof categories)[0];
-  index: number;
-}) {
-  const isLeft = index % 2 === 0;
-
-  return (
-    <div className={`relative w-full flex ${isLeft ? "flex-row" : "flex-row-reverse"} items-start`}>
-      {/* Card */}
-      <motion.div
-        className={`w-[calc(50%-2.5rem)] md:w-[calc(50%-3.5rem)] ${isLeft ? "mr-auto pr-6 md:pr-10" : "ml-auto pl-6 md:pl-10"}`}
-        initial={{ opacity: 0, x: isLeft ? -50 : 50 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.75, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.05 }}
-      >
-        {/* Category header */}
-        <div className={`mb-5 ${isLeft ? "text-left" : "text-right"}`}>
-          <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-black/35 mb-2 block">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <h2 className="text-2xl md:text-3xl font-extrabold text-black tracking-tight">
-            {cat.label}
-          </h2>
-          {/* Draw-in underline */}
-          <motion.div
-            className={`h-px bg-black mt-3 ${isLeft ? "origin-left" : "origin-right"}`}
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          />
-        </div>
-
-        {/* Skill pills */}
-        <div className="flex flex-col gap-2">
-          {cat.skills.map((s, i) => (
-            <motion.div
-              key={s.name}
-              initial={{ opacity: 0, x: isLeft ? -20 : 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.25 + i * 0.08, ease: "easeOut" }}
-            >
-              <SkillPill {...s} />
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Center node */}
-      <CenterNode index={index} />
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   Page
-───────────────────────────────────────────── */
-export default function Skills() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
+  const parents: Record<string, Point> = {};
+  parentLayout.forEach((item) => {
+    parents[item.id] = {
+      x: Math.round(item.x * width),
+      y: Math.round(item.y * height),
+    };
   });
 
+  const children: Record<string, Point> = {};
+  categories.forEach((category) => {
+    const center = parents[category.id];
+    if (!center) {
+      return;
+    }
+
+    const radius = category.skills.length > 3 ? 150 : 130;
+    const angleStep = (Math.PI * 2) / category.skills.length;
+
+    category.skills.forEach((skill, index) => {
+      const angle = angleStep * index - Math.PI / 3;
+      children[`${category.id}:${skill}`] = {
+        x: Math.round(center.x + Math.cos(angle) * radius),
+        y: Math.round(center.y + Math.sin(angle) * radius),
+      };
+    });
+  });
+
+  return { parents, children };
+}
+
+function getPath(parent: Point, child: Point) {
+  const midX = (parent.x + child.x) / 2;
+  const midY = (parent.y + child.y) / 2;
+  const curve = 28;
+  return `M ${parent.x} ${parent.y} Q ${midX + curve} ${midY - curve} ${child.x} ${child.y}`;
+}
+
+export default function Skills() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [bounds, setBounds] = useState({ width: 0, height: 0 });
+  const [parentPositions, setParentPositions] = useState<Record<string, Point>>({});
+  const [childPositions, setChildPositions] = useState<Record<string, Point>>({});
+  const [activeParent, setActiveParent] = useState<string | null>(null);
+  const [activeChild, setActiveChild] = useState<string | null>(null);
+
+  useEffect(() => {
+    const updateBounds = () => {
+      if (!containerRef.current) {
+        return;
+      }
+      const rect = containerRef.current.getBoundingClientRect();
+      setBounds({ width: rect.width, height: rect.height });
+    };
+
+    updateBounds();
+    window.addEventListener("resize", updateBounds);
+    return () => window.removeEventListener("resize", updateBounds);
+  }, []);
+
+  useEffect(() => {
+    if (!bounds.width || Object.keys(parentPositions).length > 0) {
+      return;
+    }
+    const initial = buildInitialPositions(bounds);
+    setParentPositions(initial.parents);
+    setChildPositions(initial.children);
+  }, [bounds, parentPositions]);
+
+  const connectorData = useMemo(() => {
+    return categories.flatMap((category) =>
+      category.skills.map((skill) => ({
+        id: `${category.id}:${skill}`,
+        parentId: category.id,
+        childId: `${category.id}:${skill}`,
+      }))
+    );
+  }, []);
+
+  const activeParentId = activeChild ? activeChild.split(":")[0] : activeParent;
+
   return (
-    <div ref={containerRef} className="flex flex-col w-full max-w-4xl mx-auto pt-16 pb-48">
-      <ScrollProgress scrollYProgress={scrollYProgress} />
+    <section className="relative overflow-hidden bg-black text-white">
+      <div className="absolute inset-0 skills-grid opacity-40" />
+      <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18),rgba(0,0,0,0))] blur-2xl" />
+      <div className="absolute -bottom-32 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.12),rgba(0,0,0,0))] blur-3xl" />
 
-      {/* ── Header ── */}
-      <div className="mb-20 md:mb-28 px-4 md:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-        >
-          <motion.span
-            className="inline-block text-[11px] font-bold tracking-[0.3em] uppercase text-black/35 mb-5"
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-          >
-            Technical Proficiency
-          </motion.span>
-
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-black uppercase mb-5 leading-none">
-            Skills
-          </h1>
-
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 pb-24 pt-20 md:px-10">
+        <div className="flex flex-col gap-4">
           <motion.div
-            className="h-px bg-black mb-6 origin-left"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.9, delay: 0.35, ease: "easeOut" }}
-            style={{ width: 56 }}
-          />
+            className="text-[11px] uppercase tracking-[0.35em] text-white/40"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            Skills Constellation
+          </motion.div>
+          <motion.h1
+            className="text-4xl md:text-6xl font-semibold tracking-tight"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
+            Draggable Node Graph
+          </motion.h1>
+          <motion.p
+            className="max-w-2xl text-sm md:text-base text-white/55"
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
+          >
+            Drag any node freely. Connected lines stay locked, revealing a clean
+            monochrome skill constellation.
+          </motion.p>
+        </div>
 
-          <p className="text-black/50 text-base md:text-lg max-w-md leading-relaxed">
-            A curated stack of technologies I rely on daily — from interface
-            design through to deployment.
-          </p>
-        </motion.div>
-      </div>
-
-      {/* ── Snake Timeline ── */}
-      <div className="relative w-full px-4 md:px-8 flex flex-col">
-        {/* Vertical spine */}
-        <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-px bg-black/6 pointer-events-none" />
-
-        {categories.map((cat, i) => (
-          <React.Fragment key={cat.id}>
-            <CategoryCard cat={cat} index={i} />
-            {i < categories.length - 1 && <SnakeConnector index={i} />}
-          </React.Fragment>
-        ))}
-
-        {/* End cap */}
-        <motion.div
-          className="relative flex justify-center mt-12"
-          initial={{ opacity: 0, scale: 0 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+        <div
+          ref={containerRef}
+          className="relative h-[620px] w-full rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl md:h-[720px]"
         >
-          <div className="w-3 h-3 rounded-full border-2 border-black/30 bg-white" />
-        </motion.div>
+          <svg
+            className="absolute inset-0 h-full w-full"
+            viewBox={`0 0 ${Math.max(bounds.width, 1)} ${Math.max(bounds.height, 1)}`}
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <filter id="lineGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {connectorData.map((connector) => {
+              const parent = parentPositions[connector.parentId];
+              const child = childPositions[connector.childId];
+              if (!parent || !child) {
+                return null;
+              }
+
+              const active =
+                activeParentId === connector.parentId || activeChild === connector.childId;
+
+              return (
+                <path
+                  key={connector.id}
+                  d={getPath(parent, child)}
+                  stroke={active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)"}
+                  strokeWidth={active ? 1.4 : 1}
+                  strokeLinecap="round"
+                  fill="none"
+                  filter={active ? "url(#lineGlow)" : undefined}
+                />
+              );
+            })}
+          </svg>
+
+          {categories.map((category) => {
+            const position = parentPositions[category.id];
+            const isActive = activeParentId === category.id;
+
+            return (
+              <motion.div
+                key={category.id}
+                drag
+                dragMomentum={false}
+                dragElastic={0.18}
+                onDrag={(event, info) => {
+                  setParentPositions((prev) => ({
+                    ...prev,
+                    [category.id]: {
+                      x: (prev[category.id]?.x ?? 0) + info.delta.x,
+                      y: (prev[category.id]?.y ?? 0) + info.delta.y,
+                    },
+                  }));
+                }}
+                onMouseEnter={() => setActiveParent(category.id)}
+                onMouseLeave={() => setActiveParent(null)}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-grab select-none rounded-full border backdrop-blur-md transition-all duration-300 active:cursor-grabbing ${
+                  isActive
+                    ? "border-white/70 bg-white/15 shadow-[0_0_40px_rgba(255,255,255,0.35)]"
+                    : "border-white/25 bg-black/40"
+                } float-slow`}
+                style={{ left: position?.x ?? 0, top: position?.y ?? 0 }}
+              >
+                <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full text-center text-sm font-semibold uppercase tracking-[0.2em] text-white md:h-[150px] md:w-[150px]">
+                  {category.label}
+                </div>
+              </motion.div>
+            );
+          })}
+
+          {categories.map((category) =>
+            category.skills.map((skill, index) => {
+              const id = `${category.id}:${skill}`;
+              const position = childPositions[id];
+              const isActive = activeParentId === category.id || activeChild === id;
+
+              return (
+                <motion.div
+                  key={id}
+                  drag
+                  dragMomentum={false}
+                  dragElastic={0.2}
+                  onDrag={(event, info) => {
+                    setChildPositions((prev) => ({
+                      ...prev,
+                      [id]: {
+                        x: (prev[id]?.x ?? 0) + info.delta.x,
+                        y: (prev[id]?.y ?? 0) + info.delta.y,
+                      },
+                    }));
+                  }}
+                  onMouseEnter={() => {
+                    setActiveParent(category.id);
+                    setActiveChild(id);
+                  }}
+                  onMouseLeave={() => setActiveChild(null)}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-grab select-none rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] transition-all duration-300 active:cursor-grabbing ${
+                    isActive
+                      ? "border-white/70 bg-white/15 text-white shadow-[0_0_24px_rgba(255,255,255,0.35)]"
+                      : "border-white/20 bg-black/50 text-white/70"
+                  } float-slow`}
+                  style={{
+                    left: position?.x ?? 0,
+                    top: position?.y ?? 0,
+                    animationDuration: `${8 + index * 0.8}s`,
+                  }}
+                >
+                  {skill}
+                </motion.div>
+              );
+            })
+          )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
