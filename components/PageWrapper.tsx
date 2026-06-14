@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
+import { Home, User, Briefcase, Cpu, FolderCode, Mail } from "lucide-react";
 
 interface PageWrapperProps {
   children: ReactNode;
@@ -65,44 +66,54 @@ export default function PageWrapper({ children }: PageWrapperProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Dynamic Nav Menu - Now fixed to viewport so it stays comfortable when scrolling long content */}
+      {/* Dynamic Nav Menu - Floating Glassmorphic Dock */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.8 }}
-        className="fixed bottom-8 md:bottom-12 w-full flex justify-center items-center z-50 pointer-events-none"
+        className="fixed bottom-6 md:bottom-8 w-full flex justify-center items-center z-50 pointer-events-none"
       >
-        <ul className="flex flex-wrap justify-center gap-6 md:gap-16 bg-white/70 backdrop-blur-md px-10 py-4 border border-zinc-200 pointer-events-auto">
+        <nav className="flex items-center gap-1 md:gap-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl px-3 py-2 md:px-4 md:py-2.5 border border-zinc-200/50 dark:border-zinc-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-full pointer-events-auto max-w-[92vw] overflow-x-auto no-scrollbar">
           {[
-            { name: 'Home', path: '/' },
-            { name: 'About', path: '/about' },
-            { name: 'Experience', path: '/experience' },
-            { name: 'Skills', path: '/skills' },
-            { name: 'Projects', path: '/projects' },
-            { name: 'Contact', path: '/contact' }
-          ].map((item, idx) => (
-            <li key={idx}>
+            { name: 'Home', path: '/', icon: Home },
+            { name: 'About', path: '/about', icon: User },
+            { name: 'Experience', path: '/experience', icon: Briefcase },
+            { name: 'Skills', path: '/skills', icon: Cpu },
+            { name: 'Projects', path: '/projects', icon: FolderCode },
+            { name: 'Contact', path: '/contact', icon: Mail }
+          ].map((item, idx) => {
+            const isActive = item.path === pathname;
+            const Icon = item.icon;
+            return (
               <Link
+                key={idx}
                 href={item.path}
-                className="text-black text-lg md:text-xl font-medium relative group inline-block"
+                className={`relative flex items-center justify-center gap-2 px-3.5 py-2 md:px-5 md:py-2 rounded-full text-sm font-medium transition-colors duration-300 group select-none ${
+                  isActive
+                    ? "text-black dark:text-white"
+                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+                }`}
               >
-                {/* Magnetic-like effect on hover */}
-                <motion.div
-                  whileHover={{ scale: 1.1, y: -2 }}
+                {isActive && (
+                  <motion.div
+                    layoutId="active-nav-pill"
+                    className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full -z-10"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                {/* Micro-animation scale effect on hover */}
+                <motion.span
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                  className="inline-block"
+                  className="flex items-center gap-2 relative z-10"
                 >
-                  {item.name}
-                </motion.div>
-                <span
-                  className={`absolute left-0 -bottom-2 w-full h-[2px] bg-black origin-left transition-transform duration-300 ease-out ${item.path === pathname ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
-                    }`}
-                />
+                  <Icon className="w-4 h-4 md:w-4.5 md:h-4.5 transition-transform duration-300 group-hover:rotate-12" />
+                  <span className="hidden md:inline-block font-sans">{item.name}</span>
+                </motion.span>
               </Link>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </nav>
       </motion.div>
     </main>
   );

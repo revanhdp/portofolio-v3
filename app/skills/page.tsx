@@ -126,15 +126,15 @@ export default function Skills() {
   const activeParentId = activeChild ? activeChild.split(":")[0] : activeParent;
 
   return (
-    <section className="relative overflow-hidden bg-black text-white">
+    <section className="relative min-h-screen overflow-hidden bg-white text-black">
       <div className="absolute inset-0 skills-grid opacity-40" />
-      <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18),rgba(0,0,0,0))] blur-2xl" />
-      <div className="absolute -bottom-32 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.12),rgba(0,0,0,0))] blur-3xl" />
+      <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.14),rgba(255,255,255,0))] blur-2xl" />
+      <div className="absolute -bottom-32 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.1),rgba(255,255,255,0))] blur-3xl" />
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-5 pb-24 pt-20 md:px-10">
+      <div className="relative mx-auto flex w-full flex-col gap-10 px-5 pb-24 pt-20 md:px-12">
         <div className="flex flex-col gap-4">
           <motion.div
-            className="text-[11px] uppercase tracking-[0.35em] text-white/40"
+            className="text-[11px] uppercase tracking-[0.35em] text-black/40"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -152,7 +152,7 @@ export default function Skills() {
             Draggable Node Graph
           </motion.h1>
           <motion.p
-            className="max-w-2xl text-sm md:text-base text-white/55"
+            className="max-w-2xl text-sm md:text-base text-black/55"
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -165,10 +165,10 @@ export default function Skills() {
 
         <div
           ref={containerRef}
-          className="relative h-[620px] w-full rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl md:h-[720px]"
+          className="relative w-full min-h-[520px] h-[70vh] max-h-[820px] rounded-[32px] border border-black/10 bg-white/80 backdrop-blur-xl"
         >
           <svg
-            className="absolute inset-0 h-full w-full"
+            className="absolute inset-0 h-full w-full z-0"
             viewBox={`0 0 ${Math.max(bounds.width, 1)} ${Math.max(bounds.height, 1)}`}
             preserveAspectRatio="none"
           >
@@ -195,7 +195,7 @@ export default function Skills() {
                 <path
                   key={connector.id}
                   d={getPath(parent, child)}
-                  stroke={active ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)"}
+                  stroke={active ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.2)"}
                   strokeWidth={active ? 1.4 : 1}
                   strokeLinecap="round"
                   fill="none"
@@ -226,14 +226,14 @@ export default function Skills() {
                 }}
                 onMouseEnter={() => setActiveParent(category.id)}
                 onMouseLeave={() => setActiveParent(null)}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-grab select-none rounded-full border backdrop-blur-md transition-all duration-300 active:cursor-grabbing ${
+                className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-grab select-none rounded-full border backdrop-blur-md transition-all duration-300 active:cursor-grabbing ${
                   isActive
-                    ? "border-white/70 bg-white/15 shadow-[0_0_40px_rgba(255,255,255,0.35)]"
-                    : "border-white/25 bg-black/40"
+                    ? "border-black/70 bg-white shadow-[0_0_40px_rgba(0,0,0,0.25)]"
+                    : "border-black/25 bg-white"
                 } float-slow`}
                 style={{ left: position?.x ?? 0, top: position?.y ?? 0 }}
               >
-                <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full text-center text-sm font-semibold uppercase tracking-[0.2em] text-white md:h-[150px] md:w-[150px]">
+                <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full text-center text-sm font-semibold uppercase tracking-[0.2em] text-black md:h-[150px] md:w-[150px]">
                   {category.label}
                 </div>
               </motion.div>
@@ -266,10 +266,10 @@ export default function Skills() {
                     setActiveChild(id);
                   }}
                   onMouseLeave={() => setActiveChild(null)}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-grab select-none rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] transition-all duration-300 active:cursor-grabbing ${
+                  className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 cursor-grab select-none rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] transition-all duration-300 active:cursor-grabbing ${
                     isActive
-                      ? "border-white/70 bg-white/15 text-white shadow-[0_0_24px_rgba(255,255,255,0.35)]"
-                      : "border-white/20 bg-black/50 text-white/70"
+                      ? "border-black/70 bg-white text-black shadow-[0_0_24px_rgba(0,0,0,0.2)]"
+                      : "border-black/20 bg-white text-black/70"
                   } float-slow`}
                   style={{
                     left: position?.x ?? 0,
