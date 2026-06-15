@@ -66,14 +66,14 @@ export default function PageWrapper({ children }: PageWrapperProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Dynamic Nav Menu - Floating Glassmorphic Dock */}
+      {/* Dynamic Nav Menu - Simple Minimalist B/W Dock */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.8 }}
         className="fixed bottom-6 md:bottom-8 w-full flex justify-center items-center z-50 pointer-events-none"
       >
-        <nav className="flex items-center gap-1 md:gap-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl px-3 py-2 md:px-4 md:py-2.5 border border-zinc-200/50 dark:border-zinc-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-full pointer-events-auto max-w-[92vw] overflow-x-auto no-scrollbar">
+        <nav className="flex items-center gap-1 md:gap-2 bg-white/95 dark:bg-black/95 px-3 py-2 md:px-4 md:py-2 border border-zinc-200 dark:border-zinc-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] rounded-full pointer-events-auto max-w-[92vw] overflow-x-auto no-scrollbar">
           {[
             { name: 'Home', path: '/', icon: Home },
             { name: 'About', path: '/about', icon: User },
@@ -88,28 +88,23 @@ export default function PageWrapper({ children }: PageWrapperProps) {
               <Link
                 key={idx}
                 href={item.path}
-                className={`relative flex items-center justify-center gap-2 px-3.5 py-2 md:px-5 md:py-2 rounded-full text-sm font-medium transition-colors duration-300 group select-none ${
+                className={`relative flex flex-col items-center justify-center pb-2.5 pt-1.5 px-3.5 md:px-5 text-sm font-medium transition-colors duration-250 group select-none ${
                   isActive
                     ? "text-black dark:text-white"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+                    : "text-zinc-400 dark:text-zinc-500 hover:text-black dark:hover:text-white"
                 }`}
               >
+                <span className="flex items-center gap-2">
+                  <Icon className="w-4 h-4 md:w-4.5 md:h-4.5 transition-transform duration-200 group-hover:scale-105" />
+                  <span className="hidden md:inline-block font-sans">{item.name}</span>
+                </span>
                 {isActive && (
-                  <motion.div
-                    layoutId="active-nav-pill"
-                    className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 rounded-full -z-10"
+                  <motion.span
+                    layoutId="active-nav-dot"
+                    className="absolute bottom-1 w-1 h-1 bg-black dark:bg-white rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                {/* Micro-animation scale effect on hover */}
-                <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 relative z-10"
-                >
-                  <Icon className="w-4 h-4 md:w-4.5 md:h-4.5 transition-transform duration-300 group-hover:rotate-12" />
-                  <span className="hidden md:inline-block font-sans">{item.name}</span>
-                </motion.span>
               </Link>
             );
           })}
